@@ -1,0 +1,142 @@
+---
+title: "Exploratory Data Analysis of Titanic Passanger"
+author: "Mohammad Isa Aditya"
+date: "January 6, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(DT)
+library(ggplot2)
+library(corrplot)
+library(dplyr)
+```
+### Latar Belakang
+  RMS Titanic adalah sebuah kapal penumpang super Britania Raya yang tenggelam di Samudra Atlantik Utara pada tanggal 15 April 1912 setelah menabrak sebuah gunung es menuju pelayaran perdananya dari Southampton, Inggris ke New York City. Tenggelamnya Titanic mengakibatkan kematian sebanyak 1.514 orang dalam salah satu bencana maritim masa damai paling mematikan sepanjang sejarah. Titanic merupakan kapal terbesar di dunia pada pelayaran perdananya. Satu dari tiga kapal samudra kelas Olympic dioperasikan oleh White Star Line. Kapal ini dibangun pada 1909 sampai 1911 oleh galangan kapal Harland and Wolff di Belfast. Kapal ini sanggup mengangkut 2.224 penumpang. Para penumpangnya terdiri dari sejumlah orang terkaya di dunia, serta lebih dari seribu emigran dari Britania Raya, Irlandia, Skandinavia, dan negara-negara lain yang mencari kehidupan baru di Amerika Utara. Adapun data penumpang Titanic akan dianalisis menggunakan Exploratory Data Analysis untuk mengembangkan pemahaman terhadap data tersebut.
+
+### Data yang digunakan
+
+Data yang digunakan adalah dataset Titanic yang merupakan data karakteristik penumpang titanic dengan variabel yang ada pada dataset adalah sebagai berikut:
+
+Variabel | Keterangan
+--------- | ------------------------------------------------------------------------------------------
+PassengerId | _type should be integers_
+Survived | _Survived or Not_ (Binary)
+Pclass | _Class of Travel_
+Name | _Name of Passenger_
+Sex | _Gender_ (female and male)
+Age | _Age of Passenger_ 
+SibSp | _Number of Sibling/Spouse aboard_
+Parch | _Number of Parent/Child aboard_ 
+Ticket | _Ticket number_
+Fare | _Passenger fare_ 
+Embarked | _The port in which a passenger has embarked_ 
+
+Adapun data yang digunakan adalah variabel _Survived_ (category), _Pclass_ (category), _Sex_ (category), _Age_ (numeric), _SibSp_ (numeric), _Parch_ (numeric), dan _Embarked_ (category).
+
+```{r Data, message=FALSE, warning=FALSE}
+data("titanic")
+datatable(titanic)
+```
+
+```{r}
+summary(titanic)
+```
+
+### Missing values
+
+Pengecekan  _missing values_ dilakukan dengan melihat grafik berikut:
+```{r}
+library(naniar)
+gg_miss_var(titanic, show_pct = TRUE)
+```
+
+Kesimpulan : ada missing values pada variabel _Age_ dan _Cabin_ di data _titanic_ sehingga variabel _Age_ tidak digunakan pada analisis ini.
+
+##### Visualization {.tabset}
+
+Berikut adalah korelasi antar variabel yang numeric dari data _titanic_ 
+```{r}
+num=titanic[c('SibSp','Parch')]
+corrplot(cor(num),type="full",method="square")
+```
+
+Tidak terjadi multikolinearitas, antara variabel _SibSp_ dengan _Parch_.
+
+###### Variabel Survived terhadap Sex
+
+berikut adalah histogram untuk variabel Survived terhadap Sex.
+```{r}
+ggplot(titanic,aes(x = Survived))+ geom_bar()+ facet_wrap(~Sex)
+```
+
+Berdasarkan histogram gabungan antara variabel _Survived_ dan _Sex_, terlihat bahwa lebih banyak penumpang perempuan yang selamat dalam kejadian tragis Titanic.
+
+###### Variabel Survived terhadap Pclass
+
+berikut adalah histogram untuk variabel Survived terhadap Pclass
+```{r}
+ggplot(titanic,aes(x = Survived))+ geom_bar()+ facet_wrap(~Pclass)
+```
+
+Berdasarkan histogram gabungan antara variabel _Survived_ dan _Pclass_, terlihat bahwa sebagian besar penumpang kelas travel 3 tidak selamat dalam kejadian tragis Titanic tersebut, sedangkan kelas travel dengan penumpang selamat terbanyak adalah penumpang kelas travel 1.
+
+###### SibSp
+
+berikut adalah histogram untuk variabel, _SibSp_.
+```{r}
+ggplot(data = titanic) +
+  geom_histogram(mapping = aes(x = SibSp, fill=..count..), binwidth = 0.4)+
+    scale_y_continuous(name = "Number of Sibling/Spouse aboard") +
+    scale_x_continuous(name = " SibSp") +
+    ggtitle("Number of Sibling/Spouse aboard Histogram ")
+```
+
+Berdasarkan histogram tersebut, diketahui bahwa mayoritas penumpang tidak memiliki saudara didalam kapal.
+
+
+###### Parch
+
+berikut adalah histogram untuk variabel, _Parch_.
+```{r}
+ggplot(data = titanic) +
+  geom_histogram(mapping = aes(x = Parch, fill=..count..), binwidth = 0.4)+
+    scale_y_continuous(name = "Number of Parent/Child aboard") +
+    scale_x_continuous(name = " Parch") +
+    ggtitle("Number of Parent/Child aboard Histogram ")
+```
+Berdasarkan histogram tersebut, diketahui bahwa mayoritas penumpang tidak memiliki anak atau orang tua didalam kapal.
+
+###### Variabel Survived terhadap Pclass
+
+berikut adalah histogram untuk variabel Survived terhadap Pclass
+```{r}
+ggplot(titanic,aes(x = Survived))+ geom_bar()+ facet_wrap(~Embarked)
+```
+
+Berdasarkan histogram tersebut, diketahui bahwa mayoritas jumlah penumpang yang selamat dan tidak selamat memiliki tujuan ke pelabuhan Southampton.
+
+###### Boxplot
+
+Berikut adalah Boxplot untuk setiap variabel numerik
+
+```{r message=FALSE, warning=FALSE}
+require(reshape2)
+ggplot(data = melt(num[,]), aes(x=variable, y=value)) +
+  geom_boxplot() +
+  facet_wrap(~variable, scales='free')
+```
+
+juga dapat ditampilkan Boxplot untuk variabel kategorik
+
+```{r message=FALSE, warning=FALSE}
+kat=titanic[c('Sex','Pclass','Embarked','Survived')]
+
+ggplot(data = kat, aes(x=Sex, y=Survived)) +
+  geom_boxplot() 
+ggplot(data = kat, aes(x=Pclass, y=Survived)) +
+  geom_boxplot() 
+ggplot(data = kat, aes(x=Embarked, y=Survived)) +
+  geom_boxplot() 
+```
